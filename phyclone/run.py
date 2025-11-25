@@ -39,6 +39,7 @@ def run(
     max_time=float("inf"),
     num_iters=5000,
     plateau_iters=20,
+    plateau_finder_flag=1, 
     num_particles=100,
     num_samples_data_point=1,
     num_samples_prune_regraph=1,
@@ -73,7 +74,7 @@ def run(
     outlier_modelling_active = outlier_prob > 0
 
     print_welcome_message(
-        burnin, density, num_chains, num_iters, plateau_iters, num_particles, seed, outlier_modelling_active, rng_main, proposal
+        burnin, density, num_chains, num_iters, plateau_iters, plateau_finder_flag, num_particles, seed, outlier_modelling_active, rng_main, proposal
     )
 
     data, samples = load_data(
@@ -100,6 +101,7 @@ def run(
             max_time,
             num_iters,
             plateau_iters,
+            plateau_finder_flag,
             num_particles,
             num_samples_data_point,
             num_samples_prune_regraph,
@@ -131,6 +133,7 @@ def run(
                     max_time,
                     num_iters,
                     plateau_iters,
+                    plateau_finder_flag,
                     num_particles,
                     num_samples_data_point,
                     num_samples_prune_regraph,
@@ -166,6 +169,7 @@ def print_welcome_message(
     num_chains,
     num_iters,
     plateau_iters,
+    plateau_finder_flag,
     num_particles,
     seed,
     outlier_modelling_active,
@@ -185,6 +189,7 @@ def print_welcome_message(
     print("Number of burn-in iterations: {}".format(burnin))
     print("Maximum Number of MCMC iterations: {}".format(num_iters))
     print("Number of MCMC iterations in a plateau to terminate: {}".format(plateau_iters))
+    print("Plateau finder method code: {}".format(plateau_finder_flag))
     if seed is not None:
         seed_msg = "(user-provided)"
     else:
@@ -204,6 +209,7 @@ def run_phyclone_chain(
     max_time,
     num_iters,
     plateau_iters,
+    plateau_finder_flag,
     num_particles,
     num_samples_data_point,
     num_samples_prune_regraph,
@@ -240,6 +246,7 @@ def run_phyclone_chain(
         max_time,
         num_iters,
         plateau_iters,
+        plateau_finder_flag,
         num_samples_data_point,
         num_samples_prune_regraph,
         print_freq,
@@ -262,6 +269,7 @@ def _run_main_sampler(
     max_time,
     num_iters,
     plateau_iters,
+    plateau_finder_flag,
     num_samples_data_point,
     num_samples_prune_regraph,
     print_freq,
@@ -308,7 +316,7 @@ def _run_main_sampler(
                 append_to_trace(i, timer, trace, tree, tree_dist)    
 
                 if i >= plateau_iters:
-                    plateau_flag = plateau_finder(trace[-plateau_iters::])
+                    plateau_flag = plateau_finder(trace[-plateau_iters::], plateau_finder_flag)
             
                 if plateau_flag:
                     print("Plateau of length ", plateau_iters," detected, terminating chain early at iteration ", i)
@@ -324,7 +332,12 @@ def _run_main_sampler(
     return results
 
 # TODO make it work and import functions from stat or ml
-def plateau_finder(trace):
+def plateau_finder(trace, finder_flag):
+    if finder_flag == 1:
+        return ml_plateau(trace)
+    else if finder_flag == 2:
+        return stat_plateau(trace)
+    else:
     plateau_flag = False
     max = max(trace)
     min = min(trace)
