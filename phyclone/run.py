@@ -2,6 +2,8 @@
 Created on 2012-02-08
 
 @author: Andrew Roth
+
+adapted by @author: Giuli Sucar
 """
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
