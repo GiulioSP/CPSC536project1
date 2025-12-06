@@ -10,6 +10,12 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
 from multiprocessing import get_context
 
+# attempt with multithreading
+import time
+import random
+import os
+import multiprocessing as mp
+
 import numpy as np
 
 from phyclone.data.pyclone import load_data
@@ -26,6 +32,7 @@ from phyclone.tree import FSCRPDistribution, Tree, TreeJointDistribution
 from phyclone.utils import Timer
 from phyclone.utils.cache import clear_proposal_dist_caches, clear_convolution_caches
 
+from phyclone.plateau import stat_plateau, ml_plateau
 
 def run(
     in_file,
@@ -38,7 +45,7 @@ def run(
     grid_size=101,
     max_time=float("inf"),
     num_iters=5000,
-    plateau_iters=20,
+    plateau_iters=5,
     plateau_finder_flag=1, 
     num_particles=100,
     num_samples_data_point=1,
@@ -315,6 +322,7 @@ def _run_main_sampler(
             if i % thin == 0:
                 append_to_trace(i, timer, trace, tree, tree_dist)    
 
+                plateau_flag = False
                 if i >= plateau_iters:
                     plateau_flag = plateau_finder(trace[-plateau_iters::], plateau_finder_flag)
             
@@ -333,18 +341,14 @@ def _run_main_sampler(
 
 # TODO make it work and import functions from stat or ml
 def plateau_finder(trace, finder_flag):
-    if finder_flag == 1:
-        return ml_plateau(trace)
-    else if finder_flag == 2:
-        return stat_plateau(trace)
-    else:
-    plateau_flag = False
-    max = max(trace)
-    min = min(trace)
-    mean = np.mean(trace)
-    if abs(max - min)/mean < 10:
-        plateau_flag = True
-    return plateau_flag
+    #if (finder_flag == 1):
+    #    return ml_plateau(trace)
+    #elif (finder_flag == 2):
+    #    return stat_plateau(trace)
+    #else:
+        print(trace)
+
+    return True 
 
 def append_to_trace(i, timer, trace, tree, tree_dist):
     trace.append(
