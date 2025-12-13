@@ -57,7 +57,7 @@ Analyze convergence for a $k$ number of chains. For example: if number of chains
 Alternatively, if we want to look at all subsets of size $\{2,3,\cdots,8\}$, we make the analyzer with $k=8$ and `check_all_subsets=TRUE`:
 
 ```
-    four_analyzer_all = stat_plateau(
+    all_analyzer = stat_plateau(
       csv_path=your_csv_path,
       k=8,
       check_all_subsets=TRUE,
@@ -66,6 +66,6 @@ Alternatively, if we want to look at all subsets of size $\{2,3,\cdots,8\}$, we 
     )
 
     # check convergence
-    four_analyzer_all.evaluate_convergence()
+    all_analyzer.evaluate_convergence()
 ```
 
