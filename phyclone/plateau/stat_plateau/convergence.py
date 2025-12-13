@@ -1,11 +1,41 @@
 import os
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 from itertools import combinations
 from convergenceMetrics import PSRF_between_chain_ESS, calculate_rhat
 
 # Python script for convergence analysis
+def filter_valid_chains_at_iteration(chains, N):
+    """
+    Filter chains at a given iteration, keeping only those with sufficient samples.
+    
+    When chains have different lengths, this function identifies which chains have
+    at least N samples and extracts the first N samples from each valid chain.
+    
+    Args:
+        chains: list[np.ndarray] of chain data, where each array contains log probability values
+        N: Current iteration number (sample count threshold)
+    
+    Returns:
+        tuple: (valid_chain_indices, chains_at_N, should_stop)
+            - valid_chain_indices: list of indices for chains with >= N samples
+            - chains_at_N: list of first N samples from each valid chain
+            - should_stop: bool indicating if fewer than 2 chains remain (True = stop)
+    """
+    # Identify which chains have at least N samples
+    valid_chain_indices = [i for i, chain in enumerate(chains) if len(chain) >= N]
+    
+    # Check if we should stop (fewer than 2 chains remaining)
+    should_stop = len(valid_chain_indices) < 2
+    if should_stop:
+        print(f"Stopping at iteration {N}: only {len(valid_chain_indices)} chain(s) remaining")
+    
+    # Extract first N samples from valid chains
+    chains_at_N = [chains[i][:N] for i in valid_chain_indices]
+    
+    return valid_chain_indices, chains_at_N, should_stop
+
+
 def analyze_convergence(
     chains_list,
     ess_threshold=None,
@@ -70,18 +100,13 @@ def analyze_convergence(
     
     rows = []
     
-    # Iterate at lag_window intervals with progress bar
-    for N in tqdm(range(lag_window, max_length + 1, lag_window), desc="Computing diagnostics"):
-        # Identify which chains have at least N samples
-        valid_chain_indices = [i for i, chain in enumerate(chains) if len(chain) >= N]
+    # Iterate at lag_window intervals
+    for N in range(lag_window, max_length + 1, lag_window):
+        # Filter chains at this iteration
+        valid_chain_indices, chains_at_N, should_stop = filter_valid_chains_at_iteration(chains, N)
         
-        # Stop if fewer than 2 chains remain
-        if len(valid_chain_indices) < 2:
-            print(f"Stopping at iteration {N}: only {len(valid_chain_indices)} chain(s) remaining")
+        if should_stop:
             break
-        
-        # Extract first N samples from valid chains
-        chains_at_N = [chains[i][:N] for i in valid_chain_indices]
         
         try:
             # Generate all k-sized subsets of valid chain indices
@@ -154,8 +179,8 @@ def analyze_convergence(
 
 def run_convergence_analysis(
     output_base_dir,
-    csv_path="data/processed/combined.csv",
-    k_values=None,
+    csv_path="phyclone/plateau/stat_plateau/sample_data/combined.csv",
+    k_values= [2, 3, 4],
     window=0,
     lag_window=10
 ):
@@ -164,20 +189,14 @@ def run_convergence_analysis(
     
     Args:
         csv_path: Path to combined CSV file with columns: chain, iter, log_p, dataset
-        output_base_dir: Base directory for output folders (half_chains, three_fourth_chains, all_chains)
+        output_base_dir: Base directory for output folders. Subfolders are named as k{k}_chains
+                         (e.g., k2_chains, k3_chains, k4_chains, etc.)
         k_values: List of k values to analyze. Default [2, 3, 4]
         window: Window size for sequential chain subsetting. If 0 (default), uses entire chains.
                 If > 0, splits each chain into sequential windows of size `window` and analyzes
                 them progressively until convergence is achieved.
+        lag_window: Lag window parameter for convergence analysis
     """
-    if k_values is None:
-        k_values = [2, 3, 4]
-    
-    k_to_folder = {
-        2: "half_chains",
-        3: "three_fourth_chains",
-        4: "all_chains"
-    }
     
     # Read combined.csv
     data = pd.read_csv(csv_path)
@@ -259,7 +278,7 @@ def run_convergence_analysis(
                     combined_df = pd.concat(all_results_by_k[k], ignore_index=True)
                     
                     # Create output folder if it doesn't exist
-                    output_folder = os.path.join(output_base_dir, k_to_folder[k])
+                    output_folder = os.path.join(output_base_dir, f"k{k}_chains")
                     if not os.path.exists(output_folder):
                         os.makedirs(output_folder)
                     
@@ -275,7 +294,7 @@ def run_convergence_analysis(
                 print(f"Analyzing convergence for dataset: {dataset_name}, k={k}")
                 
                 # Create output folder if it doesn't exist
-                output_folder = os.path.join(output_base_dir, k_to_folder[k])
+                output_folder = os.path.join(output_base_dir, f"k{k}_chains")
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
                 
@@ -295,7 +314,7 @@ def run_convergence_analysis(
     print("Convergence analysis complete.")
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # run_convergence_analysis(output_base_dir="output/entire_chain", lag_window=10)
     # run_convergence_analysis(window=20, output_base_dir="output/windows/size20", lag_window=2)
-    run_convergence_analysis(window=50, output_base_dir="output/windows/size50", lag_window=2)
+    # run_convergence_analysis(window=50, output_base_dir="output/windows/size50", lag_window=2)

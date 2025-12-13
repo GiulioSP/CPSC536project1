@@ -1,15 +1,16 @@
+import os
 import numpy as np
 import pandas as pd
-from convergence import analyze_convergence
+from convergence import analyze_convergence, run_convergence_analysis
 
 
 class stat_plateau:
     def __init__(
         self,
-        csv_path="data/processed/combined.csv",
+        csv_path="phyclone/plateau/stat_plateau/sample_data/combined.csv",
         k=2,
+        check_all_subsets=False,
         window=0,
-        lag_window=10,
         convergence_threshold=None
     ):
         """
@@ -18,21 +19,41 @@ class stat_plateau:
         Args:
             csv_path: Path to combined CSV file with columns: chain, iter, log_p, dataset
             k: Single k value to analyze for subset sizes
-            window: Window size for sequential chain subsetting. If 0 (default), uses entire chains.
-                    If > 0, splits each chain into sequential windows of size `window` and analyzes
-                    them progressively until convergence is achieved.
-            lag_window: Lag window parameter for convergence analysis
+            check_all_subsets: If True, uses run_convergence_analysis to check all k values up to k.
+                               If False, only analyzes the specified k value using analyze_convergence.
+            window: Window size for sequential chain subsetting. If 0 (default), uses entire chains with lag_window=10.
+                    If > 0, splits each chain into sequential windows of size `window` and uses that as the lag_window parameter.
             convergence_threshold: Threshold for convergence detection. Default is 20*k if not provided.
         """
         self.csv_path = csv_path
         self.k = k
+        self.check_all_subsets = check_all_subsets
         self.window = window
-        self.lag_window = lag_window
         self.convergence_threshold = convergence_threshold if convergence_threshold is not None else 20 * k
     
-    def run_convergence_analysis(self):
+    def eval_convergence(self, output_base_dir="output"):
         """
-        Run convergence analysis on combined CSV data for a single k-subset size.
+        Evaluate convergence for this stat_plateau configuration.
+        
+        If check_all_subsets=False, analyzes only the specified k value using analyze_convergence.
+        If check_all_subsets=True, uses run_convergence_analysis to analyze all k values up to k.
+        
+        Args:
+            output_base_dir: Base directory where output folders will be created (only used if check_all_subsets=True)
+        
+        Returns:
+            bool: True if convergence has been reached, False otherwise
+        """
+        if not self.check_all_subsets:
+            # Use analyze_convergence for single k value analysis
+            return self._eval_convergence_single_k()
+        else:
+            # Use run_convergence_analysis for multiple k values
+            return self._eval_convergence_all_subsets(output_base_dir)
+    
+    def _eval_convergence_single_k(self):
+        """
+        Analyze convergence for a single k value using analyze_convergence.
         
         Returns:
             bool: True if convergence has been reached, False otherwise
@@ -82,9 +103,11 @@ class stat_plateau:
                     # Only proceed if we have valid windows
                     if all(len(wc) > 0 for wc in windowed_chains):
                         try:
-                            result_df = analyze_convergence(windowed_chains, k=self.k, lag_window=self.lag_window)
+                            # Use window as lag_window when window > 0, else use default 10
+                            lag_window_val = self.window if self.window > 0 else 10
+                            result_df = analyze_convergence(windowed_chains, k=self.k, lag_window=lag_window_val)
                             
-                            # Check if converged using the threshold
+                            # Check if converged
                             if result_df["converged"].any():
                                 overall_converged = True
                                 print(f"  Convergence achieved for dataset {dataset_name} at window {window_idx + 1}")
@@ -98,9 +121,11 @@ class stat_plateau:
             else:
                 # Analyze entire chains
                 try:
-                    result_df = analyze_convergence(chains_list, k=self.k, lag_window=self.lag_window)
+                    # Use window as lag_window when window > 0, else use default 10
+                    lag_window_val = self.window if self.window > 0 else 10
+                    result_df = analyze_convergence(chains_list, k=self.k, lag_window=lag_window_val)
                     
-                    # Check if converged using the threshold
+                    # Check if converged
                     if result_df["converged"].any():
                         overall_converged = True
                         print(f"  Convergence achieved for dataset {dataset_name}")
@@ -110,4 +135,58 @@ class stat_plateau:
                     print(f"  Traceback: {traceback.format_exc()}")
         
         return overall_converged
+    
+    def _eval_convergence_all_subsets(self, output_base_dir):
+        """
+        Analyze convergence for multiple k values using run_convergence_analysis.
+        
+        Analyzes all k values from 2 to self.k (inclusive).
+        
+        Args:
+            output_base_dir: Base directory where output folders will be created
+        
+        Returns:
+            bool: True if convergence has been reached, False otherwise
+        """
+        # Generate list of k values from 2 to self.k
+        k_values = list(range(2, self.k + 1))
+        
+        # Use window as lag_window when window > 0, else use default 10
+        lag_window_val = self.window if self.window > 0 else 10
+        
+        # Call run_convergence_analysis with all k values
+        run_convergence_analysis(
+            output_base_dir=output_base_dir,
+            csv_path=self.csv_path,
+            k_values=k_values,
+            window=self.window,
+            lag_window=lag_window_val
+        )
+        
+        # Analyze the results to determine if convergence was achieved
+        # Check if any output files were created and contain convergence=True
+        converged = False
+        
+        # Check all k folders that were created (k2_chains, k3_chains, ..., k{self.k}_chains)
+        for k in range(2, self.k + 1):
+            output_folder = os.path.join(output_base_dir, f"k{k}_chains")
+            if not os.path.exists(output_folder):
+                continue
+            
+            for filename in os.listdir(output_folder):
+                if filename.endswith(".csv"):
+                    filepath = os.path.join(output_folder, filename)
+                    try:
+                        result_df = pd.read_csv(filepath)
+                        if result_df["converged"].any():
+                            converged = True
+                            print(f"  Convergence achieved in {filepath} for k={k}")
+                            break
+                    except Exception as e:
+                        print(f"Warning: Could not read {filepath}: {e}")
+            
+            if converged:
+                break
+        
+        return converged
 
