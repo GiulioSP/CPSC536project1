@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from convergence import analyze_convergence
+from .convergence import analyze_convergence
 
 
 class stat_plateau:

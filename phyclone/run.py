@@ -44,8 +44,8 @@ def run(
     density="beta-binomial",
     grid_size=101,
     max_time=float("inf"),
-    num_iters=5000,
-    plateau_iters=5,
+    num_iters=500,
+    plateau_iterations=20,
     plateau_finder_flag=1, 
     num_particles=100,
     num_samples_data_point=1,
@@ -81,7 +81,7 @@ def run(
     outlier_modelling_active = outlier_prob > 0
 
     print_welcome_message(
-        burnin, density, num_chains, num_iters, plateau_iters, plateau_finder_flag, num_particles, seed, outlier_modelling_active, rng_main, proposal
+        burnin, density, num_chains, num_iters, plateau_iterations, plateau_finder_flag, num_particles, seed, outlier_modelling_active, rng_main, proposal
     )
 
     data, samples = load_data(
@@ -107,7 +107,7 @@ def run(
             data,
             max_time,
             num_iters,
-            plateau_iters,
+            plateau_iterations,
             plateau_finder_flag,
             num_particles,
             num_samples_data_point,
@@ -129,6 +129,10 @@ def run(
 
         rng_list = rng_main.spawn(num_chains)
 
+#        manager = mp.Manager()
+#        progress_queue = manager.Queue()
+#        traces = []
+
         with ProcessPoolExecutor(max_workers=num_chains, mp_context=get_context("spawn")) as pool:
             chain_results = [
                 pool.submit(
@@ -139,7 +143,7 @@ def run(
                     data,
                     max_time,
                     num_iters,
-                    plateau_iters,
+                    plateau_iterations,
                     plateau_finder_flag,
                     num_particles,
                     num_samples_data_point,
@@ -153,6 +157,7 @@ def run(
                     thin,
                     chain_num,
                     subtree_update_prob,
+                    #progress_queue, 
                 )
                 for chain_num, rng in enumerate(rng_list)
             ]
@@ -169,13 +174,15 @@ def run(
 
     create_main_run_output(cluster_file, out_file, results)
 
+    stat_plateau(results)
+
 
 def print_welcome_message(
     burnin,
     density,
     num_chains,
     num_iters,
-    plateau_iters,
+    plateau_iterations,
     plateau_finder_flag,
     num_particles,
     seed,
@@ -195,7 +202,7 @@ def print_welcome_message(
     print("Proposal distribution: {}".format(proposal_kernel))
     print("Number of burn-in iterations: {}".format(burnin))
     print("Maximum Number of MCMC iterations: {}".format(num_iters))
-    print("Number of MCMC iterations in a plateau to terminate: {}".format(plateau_iters))
+    print("Number of MCMC iterations in a plateau to terminate: {}".format(plateau_iterations))
     print("Plateau finder method code: {}".format(plateau_finder_flag))
     if seed is not None:
         seed_msg = "(user-provided)"
@@ -215,7 +222,7 @@ def run_phyclone_chain(
     data,
     max_time,
     num_iters,
-    plateau_iters,
+    plateau_iterations,
     plateau_finder_flag,
     num_particles,
     num_samples_data_point,
@@ -229,6 +236,7 @@ def run_phyclone_chain(
     thin,
     chain_num,
     subtree_update_prob,
+#    progress_queue, 
 ):
     tree_dist = TreeJointDistribution(FSCRPDistribution(concentration_value), outlier_modelling_active)
     kernel = setup_kernel(outlier_modelling_active, proposal, rng, tree_dist)
@@ -252,7 +260,7 @@ def run_phyclone_chain(
         data,
         max_time,
         num_iters,
-        plateau_iters,
+        plateau_iterations,
         plateau_finder_flag,
         num_samples_data_point,
         num_samples_prune_regraph,
@@ -266,6 +274,7 @@ def run_phyclone_chain(
         chain_num,
         rng,
         subtree_update_prob,
+        #progress_queue, 
     )
     return results
 
@@ -275,7 +284,7 @@ def _run_main_sampler(
     data,
     max_time,
     num_iters,
-    plateau_iters,
+    plateau_iterations,
     plateau_finder_flag,
     num_samples_data_point,
     num_samples_prune_regraph,
@@ -289,6 +298,7 @@ def _run_main_sampler(
     chain_num,
     rng,
     subtree_update_prob,
+    #progress_queue, 
 ):
     clear_convolution_caches()
     trace = setup_trace(timer, tree, tree_dist)
@@ -298,6 +308,8 @@ def _run_main_sampler(
     tree_sampler = samplers.tree_sampler
     conc_sampler = samplers.conc_sampler
     subtree_sampler = samplers.subtree_sampler
+    plateau_i_count = 0
+    plateau_flag = False
 
     for i in range(num_iters):
         with timer:
@@ -320,14 +332,15 @@ def _run_main_sampler(
             tree.relabel_nodes()
 
             if i % thin == 0:
-                append_to_trace(i, timer, trace, tree, tree_dist)    
+                append_to_trace(i, chain_num, timer, trace, tree, tree_dist)    
 
-                plateau_flag = False
-                if i >= plateau_iters:
-                    plateau_flag = plateau_finder(trace[-plateau_iters::], plateau_finder_flag)
+                if i >= (plateau_iterations+plateau_i_count-1):
+                    #plateau_flag = plateau_finder(progress_queue, trace[-plateau_iterations::], plateau_finder_flag, plateau_i_count)
+                    plateau_flag = plateau_finder(trace[-plateau_iterations::], plateau_finder_flag, plateau_i_count)
+                    plateau_i_count += plateau_iterations
             
                 if plateau_flag:
-                    print("Plateau of length ", plateau_iters," detected, terminating chain early at iteration ", i)
+                    print("Plateau of length ", plateau_iterations," detected, terminating chain ", chain_num, " early at iteration ", i)
                     break 
 
             if timer.elapsed >= max_time:
@@ -339,21 +352,23 @@ def _run_main_sampler(
     results = {"data": data, "samples": samples, "trace": trace, "chain_num": chain_num}
     return results
 
-# TODO make it work and import functions from stat or ml
-def plateau_finder(trace, finder_flag):
-    #if (finder_flag == 1):
-    #    return ml_plateau(trace)
+#def plateau_finder(progress_queue, trace, finder_flag, plateau_i_count):
+def plateau_finder(trace, finder_flag, plateau_i_count):
+    return ml_plateau(trace)
     #elif (finder_flag == 2):
     #    return stat_plateau(trace)
     #else:
-        print(trace)
+    #print(len(trace))
+    #if (plateau_i_count >= 2):
+    #    return True
+    #else:
+    #    return False
 
-    return True 
-
-def append_to_trace(i, timer, trace, tree, tree_dist):
+def append_to_trace(i, chain_num, timer, trace, tree, tree_dist):
     trace.append(
         {
             "iter": i,
+            "chain": chain_num,
             "time": timer.elapsed,
             "alpha": tree_dist.prior.alpha,
             "log_p_one": tree_dist.log_p_one(tree),

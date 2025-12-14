@@ -1,0 +1,68 @@
+
+####################################################################################################
+PhyClone - Analysis Run
+####################################################################################################
+
+Running with the following parameters:
+
+Number of independent chains: 2
+Number of PG particles: 100
+Density: beta-binomial
+Proposal distribution: semi-adapted
+Number of burn-in iterations: 1
+Maximum Number of MCMC iterations: 8
+Number of MCMC iterations in a plateau to terminate: 3
+Plateau finder method code: 1
+Random seed: 280376776609127197429573782670058210927 (machine-entropy)
+Outlier modelling allowed: False
+
+####################################################################################################
+
+Parsing Input Data...
+
+Tumour content column not found. Setting values to 1.0.
+Num mutations: 136
+Num Samples: 4
+Samples: SRR385938 SRR385939 SRR385940 SRR385941
+####################################################################################################
+
+####################################################################################################
+Burnin
+####################################################################################################
+chain: 1 || iter: 0, alpha: 1.0, log_p: -40681.581, num_nodes: 1, num_outliers: 0, num_roots: 1
+chain: 1 || iter: 1, alpha: 1.0, log_p: -6887.255, num_nodes: 29, num_outliers: 0, num_roots: 3
+
+####################################################################################################
+Post-burnin
+####################################################################################################
+
+chain: 1 || iter: 0, alpha: 1.0, log_p: -6887.255, num_nodes: 29, num_outliers: 0, num_roots: 3
+chain: 1 || iter: 1, alpha: 5.494, log_p: -6425.879, num_nodes: 29, num_outliers: 0, num_roots: 3
+chain: 1 || iter: 2, alpha: 5.394, log_p: -6178.549, num_nodes: 29, num_outliers: 0, num_roots: 3
+3
+chain: 1 || iter: 3, alpha: 8.817, log_p: -4534.496, num_nodes: 25, num_outliers: 0, num_roots: 3
+chain: 1 || iter: 4, alpha: 8.542, log_p: -4444.901, num_nodes: 25, num_outliers: 0, num_roots: 3
+chain: 1 || iter: 5, alpha: 7.12, log_p: -4103.675, num_nodes: 23, num_outliers: 0, num_roots: 2
+3
+Plateau of length  3  detected, terminating chain early at iteration  5
+####################################################################################################
+Burnin
+####################################################################################################
+chain: 0 || iter: 0, alpha: 1.0, log_p: -40681.581, num_nodes: 1, num_outliers: 0, num_roots: 1
+chain: 0 || iter: 1, alpha: 1.0, log_p: -8107.05, num_nodes: 35, num_outliers: 0, num_roots: 3
+
+####################################################################################################
+Post-burnin
+####################################################################################################
+
+chain: 0 || iter: 0, alpha: 1.0, log_p: -8107.05, num_nodes: 35, num_outliers: 0, num_roots: 3
+chain: 0 || iter: 1, alpha: 5.51, log_p: -7210.533, num_nodes: 35, num_outliers: 0, num_roots: 3
+chain: 0 || iter: 2, alpha: 10.209, log_p: -6688.332, num_nodes: 35, num_outliers: 0, num_roots: 3
+3
+chain: 0 || iter: 3, alpha: 9.353, log_p: -6679.426, num_nodes: 35, num_outliers: 0, num_roots: 3
+chain: 0 || iter: 4, alpha: 10.413, log_p: -6488.0, num_nodes: 35, num_outliers: 0, num_roots: 3
+chain: 0 || iter: 5, alpha: 11.133, log_p: -5786.665, num_nodes: 35, num_outliers: 0, num_roots: 3
+3
+Plateau of length  3  detected, terminating chain early at iteration  5
+Finished chain 1
+Finished chain 0

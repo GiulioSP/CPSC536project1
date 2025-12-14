@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from itertools import combinations
-from convergenceMetrics import PSRF_between_chain_ESS, calculate_rhat
+from .convergenceMetrics import PSRF_between_chain_ESS, calculate_rhat
 
 # Python script for convergence analysis
 def analyze_convergence(

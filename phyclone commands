@@ -31,3 +31,6 @@ phyclone run -i /Users/giulisucar/Desktop/CPSC\ 536/benchmarking/data/HGSOC/p9_w
 
 
 phyclone run -i /Users/giulisucar/Desktop/CPSC536/benchmarking/data/HGSOC/p2_wgs/p2/ground_truth/data.tsv -o run5p2wgs.test1.pkl.gz -n 250 -b 0 --num-chains 4 --print-freq 1 > run5p2wgs.test.txt
+
+phyclone run -i /home/giuliosp/Desktop/Joy_Lab/CPSC536/CPSC536project1/examples/mixing.tsv -o run5p2wgs.test1.pkl.gz -n 250 -b 0 --num-chains 4 --print-freq 1 > run5p2wgs.test.txt
+
