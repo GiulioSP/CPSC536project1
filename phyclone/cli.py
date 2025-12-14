@@ -32,7 +32,7 @@ from phyclone.run import run as run_prog
 @click.option(
     "-pl",
     "--plateau-iterations",
-    default=5,
+    default=20,
     type=click.IntRange(1, clamp=True),
     show_default=True,
     help="""Number of iterations to check for a plateau.""",

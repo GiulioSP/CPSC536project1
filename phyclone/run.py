@@ -335,8 +335,7 @@ def _run_main_sampler(
                 append_to_trace(i, chain_num, timer, trace, tree, tree_dist)    
 
                 if i >= (plateau_iterations+plateau_i_count-1):
-                    #plateau_flag = plateau_finder(progress_queue, trace[-plateau_iterations::], plateau_finder_flag, plateau_i_count)
-                    plateau_flag = plateau_finder(trace[-plateau_iterations::], plateau_finder_flag, plateau_i_count)
+                    plateau_flag = plateau_finder(trace, plateau_finder_flag, plateau_i_count)
                     plateau_i_count += plateau_iterations
             
                 if plateau_flag:
@@ -354,7 +353,12 @@ def _run_main_sampler(
 
 #def plateau_finder(progress_queue, trace, finder_flag, plateau_i_count):
 def plateau_finder(trace, finder_flag, plateau_i_count):
-    return ml_plateau(trace)
+    if len(trace) > 1000:
+        temp_trace = trace[-1000:]
+    else:
+        temp_trace = trace
+
+    return ml_plateau(temp_trace)
     #elif (finder_flag == 2):
     #    return stat_plateau(trace)
     #else:
