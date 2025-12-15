@@ -29,22 +29,22 @@ from phyclone.run import run as run_prog
     required=True,
     type=click.Path(resolve_path=True, writable=True),
 )
-@click.option(
-    "-pl",
-    "--plateau-iterations",
-    default=20,
-    type=click.IntRange(1, clamp=True),
-    show_default=True,
-    help="""Number of iterations to check for a plateau.""",
-)
-@click.option(
-    "-plf",
-    "--plateau-finder-flag",
-    default=1,
-    type=click.Choice([1,2,3]),
-    show_default=True,
-    help="""Number of iterations to check for a plateau.""",
-)
+#@click.option(
+#    "-pl",
+#    "--plateau-iterations",
+#    default=20,
+#    type=click.IntRange(1, clamp=True),
+#    show_default=True,
+#    help="""Number of iterations to check for a plateau.""",
+#)
+#@click.option(
+#    "-plf",
+#    "--plateau-finder-flag",
+#    default=1,
+#    type=click.Choice([1,2,3]),
+#    show_default=True,
+#    help="""Number of iterations to check for a plateau.""",
+#)
 @click.option(
     "-t",
     "--out-tree-file",
@@ -90,22 +90,22 @@ def consensus(**kwargs):
     required=True,
     type=click.Path(resolve_path=True, writable=True),
 )
-@click.option(
-    "-pl",
-    "--plateau-iterations",
-    default=5,
-    type=click.IntRange(1, clamp=True),
-    show_default=True,
-    help="""Number of iterations to check for a plateau.""",
-)
-@click.option(
-    "-plf",
-    "--plateau-finder-flag",
-    default=1,
-    type=click.Choice([1,2,3]),
-    show_default=True,
-    help="""Number of iterations to check for a plateau.""",
-)
+#@click.option(
+#    "-pl",
+#    "--plateau-iterations",
+#    default=5,
+#    type=click.IntRange(1, clamp=True),
+#    show_default=True,
+#    help="""Number of iterations to check for a plateau.""",
+#)
+#@click.option(
+#    "-plf",
+#    "--plateau-finder-flag",
+#    default=1,
+#    type=click.Choice([1,2,3]),
+#    show_default=True,
+#    help="""Number of iterations to check for a plateau.""",
+#)
 @click.option(
     "-t",
     "--out-tree-file",
@@ -144,22 +144,22 @@ def map(**kwargs):
     type=click.Path(resolve_path=True, writable=True),
     help="""Path/filename to where topology report will be written in .tsv format""",
 )
-@click.option(
-    "-pl",
-    "--plateau-iterations",
-    default=5,
-    type=click.IntRange(1, clamp=True),
-    show_default=True,
-    help="""Number of iterations to check for a plateau.""",
-)
-@click.option(
-    "-plf",
-    "--plateau-finder-flag",
-    default=1,
-    type=click.Choice([1,2,3]),
-    show_default=True,
-    help="""Number of iterations to check for a plateau.""",
-)
+#@click.option(
+#    "-pl",
+#    "--plateau-iterations",
+#    default=5,
+#    type=click.IntRange(1, clamp=True),
+#    show_default=True,
+#    help="""Number of iterations to check for a plateau.""",
+#)
+#@click.option(
+#    "-plf",
+#    "--plateau-finder-flag",
+#    default=1,
+#    type=click.Choice([1,2,3]),
+#    show_default=True,
+#    help="""Number of iterations to check for a plateau.""",
+#)
 @click.option(
     "-t",
     "--topologies-archive",
