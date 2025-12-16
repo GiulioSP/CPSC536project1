@@ -10,12 +10,6 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
 from multiprocessing import get_context
 
-# attempt with multithreading
-import time
-import random
-import os
-import multiprocessing as mp
-
 import numpy as np
 
 from phyclone.data.pyclone import load_data
@@ -129,10 +123,6 @@ def run(
 
         rng_list = rng_main.spawn(num_chains)
 
-#        manager = mp.Manager()
-#        progress_queue = manager.Queue()
-#        traces = []
-
         with ProcessPoolExecutor(max_workers=num_chains, mp_context=get_context("spawn")) as pool:
             chain_results = [
                 pool.submit(
@@ -157,7 +147,6 @@ def run(
                     thin,
                     chain_num,
                     subtree_update_prob,
-                    #progress_queue, 
                 )
                 for chain_num, rng in enumerate(rng_list)
             ]
@@ -236,7 +225,6 @@ def run_phyclone_chain(
     thin,
     chain_num,
     subtree_update_prob,
-#    progress_queue, 
 ):
     tree_dist = TreeJointDistribution(FSCRPDistribution(concentration_value), outlier_modelling_active)
     kernel = setup_kernel(outlier_modelling_active, proposal, rng, tree_dist)
@@ -274,7 +262,6 @@ def run_phyclone_chain(
         chain_num,
         rng,
         subtree_update_prob,
-        #progress_queue, 
     )
     return results
 
@@ -298,7 +285,6 @@ def _run_main_sampler(
     chain_num,
     rng,
     subtree_update_prob,
-    #progress_queue, 
 ):
     clear_convolution_caches()
     trace = setup_trace(timer, tree, tree_dist)
@@ -359,14 +345,7 @@ def plateau_finder(trace, finder_flag, plateau_i_count):
         temp_trace = trace
 
     return ml_plateau(temp_trace)
-    #elif (finder_flag == 2):
-    #    return stat_plateau(trace)
-    #else:
-    #print(len(trace))
-    #if (plateau_i_count >= 2):
-    #    return True
-    #else:
-    #    return False
+
 
 def append_to_trace(i, chain_num, timer, trace, tree, tree_dist):
     trace.append(
