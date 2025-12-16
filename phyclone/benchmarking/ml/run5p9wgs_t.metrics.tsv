@@ -1,0 +1,2 @@
+prog	depth	num_mutations	num_samples	homogeneity	completeness	v_measure	num_muts_pred	num_muts_true	ancestor_descendant_tp	ancestor_descendant_fp	ancestor_descendant_tn	ancestor_descendant_fn	ancestor_descendant_tpr	ancestor_descendant_fpr	ancestor_descendant_specificity	ancestor_descendant_precision	ancestor_descendant_f_score	num_nodes_pred	num_nodes_true
+ml	0	0	0	0.9999999999999996	0.6174801712512134	0.7635087987181409	112	112	406	1883	7417	2726	0.12962962962962962	0.2024731182795699	0.7975268817204301	0.17737003058103976	0.14978786201807784	9	3

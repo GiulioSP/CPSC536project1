@@ -1,0 +1,10 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python>=3.12
+  - numpy
+  - pandas>=2.2.2
+  - networkx>=3.6.1
+  - scikit-bio
+  - scikit-learn

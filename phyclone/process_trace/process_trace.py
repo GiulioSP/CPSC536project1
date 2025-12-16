@@ -47,10 +47,13 @@ def write_map_results(
         for curr_chain_num, chain_results in results.items():
             for i, x in enumerate(chain_results["trace"]):
                 if x["log_p_one"] > map_val:
-                    map_iter = i
+                    # Hack limitations on chain and iteration to collect result of set range of run for benchmarking early stopped simulations
+                    #if curr_chain_num == 3 and i < 180:
+                    if True:
+                        map_iter = i
 
-                    map_val = x["log_p_one"]
-                    chain_num = curr_chain_num
+                        map_val = x["log_p_one"]
+                        chain_num = curr_chain_num
 
     tree = Tree.from_dict(results[chain_num]["trace"][map_iter]["tree"])
 
